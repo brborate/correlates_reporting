@@ -1,0 +1,152 @@
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\usepackage{hyperref}
+\hypersetup{
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+
+\hypertarget{optimal-surrogate}{%
+\section{Optimal Surrogate Analysis}\label{optimal-surrogate}}
+
+\begin{table}[!h]
+
+\caption{\label{tab:learner-screens}All learner-screen combinations (14 in total) used as input to the Superlearner.}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{ll}
+\toprule
+Learner & Screen\\
+\midrule
+SL.mean & all\\
+SL.glmnet & all\\
+SL.xgboost.2.no & all\\
+SL.xgboost.4.no & all\\
+SL.xgboost.2.yes & all\\
+SL.xgboost.4.yes & all\\
+SL.ranger.yes & all\\
+SL.ranger.no & all\\
+SL.glm & all\\
+SL.glm & glmnet\\
+SL.glm & univar\_logistic\_pval\\
+SL.glm & highcor\_random\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+
+\begin{table}[!h]
+
+\caption{\label{tab:variable-sets}All variable sets (12 in total) with immunological markers for which Superlearner was run.}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{>{\raggedright\arraybackslash}p{5cm}>{\raggedright\arraybackslash}p{5cm}}
+\toprule
+\textbf{Variable Set Name} & \textbf{Variables included in the set}\\
+\midrule
+1\_baselineRiskFactors & Baseline risk factors only (Reference model)\\
+\cmidrule{1-2}
+2\_varset\_bAbSpike & Baseline risk factors + bAb anti-Spike markers\\
+\cmidrule{1-2}
+3\_varset\_bAbRBD & Baseline risk factors + bAb anti-RBD markers\\
+\cmidrule{1-2}
+4\_varset\_pnabID50 & Baseline risk factors + p-nAb ID50 markers\\
+\cmidrule{1-2}
+5\_varset\_pnabID80 & Baseline risk factors + p-nAb ID80 markers\\
+\cmidrule{1-2}
+6\_varset\_lnabMN50 & Baseline risk factors + l-nAb MN50 markers\\
+\cmidrule{1-2}
+7\_varset\_bAb\_pnabID50 & Baseline risk factors + bAb markers + p-nAb ID50 markers\\
+\cmidrule{1-2}
+8\_varset\_bAb\_pnabID80 & Baseline risk factors + bAb markers + p-nAb ID80 markers\\
+\cmidrule{1-2}
+9\_varset\_bAb\_lnabMN50 & Baseline risk factors + bAb markers + l-nAb MN50 markers\\
+\cmidrule{1-2}
+10\_varset\_bAb\_combScores & Baseline risk factors + bAb markers + combination scores across the five markers [PCA1, PCA2, FSDAM1/FSDAM2 (the first two
+components of nonlinear PCA), and the maximum signal diversity score] & components of nonlinear PCA), and the maximum signal diversity score]\\
+\cmidrule{1-2}
+11\_varset\_allMarkers & Baseline risk factors + all individual markers\\
+\cmidrule{1-2}
+12\_varset\_allMarkers\_combScores & Baseline risk factors + all individual markers + all combination scores (Full model)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}
