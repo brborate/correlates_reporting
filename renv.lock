@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.0.4",
+    "Version": "4.0.2",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -922,8 +922,8 @@
       "Package": "haldensify",
       "Version": "0.1.5",
       "Source": "GitHub",
-      "Remotes": "github::tlverse/hal9001@devel",
       "RemoteType": "github",
+      "Remotes": "github::tlverse/hal9001@devel",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "haldensify",
       "RemoteUsername": "nhejazi",
@@ -1667,10 +1667,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "0.13.2",
+      "Version": "0.13.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "079cb1f03ff972b30401ed05623cbe92"
+      "Hash": "9f10d9db5b50400c348920c5c603385e"
     },
     "repr": {
       "Package": "repr",
@@ -2077,8 +2077,8 @@
       "Package": "txshift",
       "Version": "0.3.6",
       "Source": "GitHub",
-      "Remotes": "tlverse/hal9001@devel, tlverse/sl3@devel, nhejazi/haldensify",
       "RemoteType": "github",
+      "Remotes": "tlverse/hal9001@devel, tlverse/sl3@devel, nhejazi/haldensify",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "txshift",
       "RemoteUsername": "nhejazi",
@@ -2116,15 +2116,15 @@
     },
     "vimp": {
       "Package": "vimp",
-      "Version": "2.1.10",
+      "Version": "2.2.1",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "vimp",
       "RemoteUsername": "bdwilliamson",
       "RemoteRef": "HEAD",
-      "RemoteSha": "0a0e89fd735edcbf32f12d6fe99190566589f5f0",
-      "Hash": "4a1bb4ee87eca9d9c46e81d3db8b0e9e"
+      "RemoteSha": "d2e3869fadd8bd0904c0b8d09d5a0afb1c09654d",
+      "Hash": "6a54d51910081c585fd60a2543ee9ef7"
     },
     "viridis": {
       "Package": "viridis",
