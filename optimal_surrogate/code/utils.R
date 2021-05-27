@@ -37,7 +37,7 @@ one_auc <- function(preds, Y, full_y = NULL, scale = "identity",
     ipc_weights = weights,
     ipc_fit_type = "SL", ...
   )
-  data.frame(auc = auc_lst$point_est, eif = auc_lst$eif)
+  list(auc = auc_lst$point_est, eif = auc_lst$eif)
 }
 
 # get the cross-fitted CV-AUC for a single learner's predicted values
@@ -73,7 +73,7 @@ cv_auc <- function(preds, Y, folds, scale = "identity",
   ests_eifs <- lapply(as.list(seq_len(V)), function(v) {
     one_auc(
       preds = preds[folds_numeric == v], Y[folds_numeric == v],
-      full_y = Y[folds_numeric == v], scale = scale,
+      full_y = Y, scale = scale,
       weights = weights[folds_z == v], C = C[folds_z == v],
       Z = Z[folds_z == v, , drop = FALSE], ...
     )
@@ -245,16 +245,8 @@ run_cv_sl_once <- function(seed = 1, Y = NULL, X_mat = NULL,
     verbose = TRUE
   )
 
-  # aucs <- get_all_aucs(sl_fit = fit, scale = scale)
-  #
-  # ret_lst <- list(fit = fit, folds = fit$folds, aucs = aucs)
-  # if (vimp) {
-  #   ret_lst <- list(fit = fit$SL.predict, folds = fit$folds, aucs = aucs)
-  # }
-  # return(list(cvaucs = ret_lst, cvfits = fit))
-
   aucs <- get_all_aucs(sl_fit = fit, scale = scale, weights = all_weights,
-                       C = C, Z = Z, SL.library = z_lib, ipc_est_type = ipc_est_type)
+                       C = C, Z = Z, SL.library = z_lib, ipc_est_type = ipc_est_type, family = gaussian())
 
   ret_lst <- list(fit = fit, folds = fit$folds, aucs = aucs)
 
