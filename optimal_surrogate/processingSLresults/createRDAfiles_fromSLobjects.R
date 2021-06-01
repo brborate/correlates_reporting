@@ -28,11 +28,11 @@ get_all_aucs_lst <- function(sl_fit_lst) {
   } else {
     sl_auc <- cv_auc(preds = sl_fit_lst$fit$SL.predict, Y = sl_fit_lst$fit$Y, folds = sl_fit_lst$fit$folds, weights = weights)
     out <- data.frame(Learner="SL", Screen="All", AUC = sl_auc$auc, ci_ll = sl_auc$ci[1], ci_ul=sl_auc$ci[2])
-    
+
     # Get the CV-auc of the Discrete SuperLearner predictions
     discrete_sl_auc <- cv_auc(preds = sl_fit_lst$fit$discreteSL.predict, Y = sl_fit_lst$fit$Y, folds = sl_fit_lst$fit$folds, weights = weights)
     out <- rbind(out, data.frame(Learner="Discrete SL", Screen="All", AUC = discrete_sl_auc$auc, ci_ll = discrete_sl_auc$ci[1], ci_ul = discrete_sl_auc$ci[2]))
-    
+
     # Get the cvauc of the individual learners in the library
     get_individual_auc <- function(sl_fit, col, weights) {
       if(any(is.na(sl_fit$library.predict[, col]))) return(NULL)
@@ -52,7 +52,7 @@ get_all_aucs_lst <- function(sl_fit_lst) {
 drop_seeds_with_error <- function(dat){
   newdat <- vector(mode = "list", length = 1)
   j = 1
-  for (i in 1:10){
+  for (i in seq_len(length(dat))){
     if( typeof(dat[[i]][1]) == "list" ){
       newdat[[j]] = dat[[i]]
       j = j + 1
@@ -65,7 +65,7 @@ convert_SLobject_to_Slresult_dataframe <- function(dat) {
 
   # Remove any iteration seeds that returned an error!
   newdat = drop_seeds_with_error(dat)
-    
+
   if (is.null(newdat[[1]])) {
     return( read.csv("empty_df.csv", stringsAsFactors = FALSE) %>% select(-X) %>% as_tibble() )
   }
@@ -74,10 +74,10 @@ convert_SLobject_to_Slresult_dataframe <- function(dat) {
     as_tibble(do.call(rbind.data.frame, lapply(newdat, function(x) x$cvaucs$aucs))) %>%
       filter(!is.na(ci_ll) | !is.na(ci_ul)) %>%    # drop learners that have NA for ci_ul or ci_ll for certain seeds!
       group_by(Learner, Screen) %>%
-      summarize(AUC = mean(AUC), ci_ll = mean(ci_ll), ci_ul = mean(ci_ul), .groups = 'drop') %>%
+      summarize(AUC = mean(AUC), se = sqrt(mean(se ^ 2)), .groups = 'drop') %>%
       ungroup()  %>%
       arrange(-AUC) %>%
-      mutate(AUCstr = paste0(format(round(AUC, 3), nsmall=3), " [", format(round(ci_ll, 3), nsmall=3), ", ", format(round(ci_ul, 3), nsmall=3), "]"),
+      mutate(ci_ll = AUC - qnorm(0.975) * se, ci_ul = AUC + qnorm(0.975) * se, AUCstr = paste0(format(round(AUC, 3), nsmall=3), " [", format(round(ci_ll, 3), nsmall=3), ", ", format(round(ci_ul, 3), nsmall=3), "]"),
              Learner = as.character(Learner),
              Screen = as.character(Screen),
              LearnerScreen = paste(Learner, Screen)) %>%
@@ -93,7 +93,7 @@ convert_SLobject_to_Slresult_dataframe <- function(dat) {
 readin_SLobjects_fromFolder <- function(data_path, file_pattern, endpoint, trt){
   dir(data_path, pattern = file_pattern) %>%
     tibble(file = .) %>%
-    mutate(listdat = lapply(paste0(data_path, "/", file), readRDS)) %>% 
+    mutate(listdat = lapply(paste0(data_path, "/", file), readRDS)) %>%
     mutate(data = map(listdat, convert_SLobject_to_Slresult_dataframe)) %>%
     select(file, data) %>%
     unnest(data) %>%
@@ -109,9 +109,8 @@ cvaucs_d57_vacc <- readin_SLobjects_fromFolder(data_folder, file_pattern = "*.rd
   mutate(file = str_replace(file, "CVSLfits_vacc_cvaucs_EventIndPrimaryD57_", ""),
          #file = str_replace(file, "slfits_", ""),
          #file = str_replace(file, "_y2_placebo", ""),
-         file = str_replace(file, ".rds", "")) 
+         file = str_replace(file, ".rds", ""))
 # %>%
-#   separate(file, c("slrun", "varset"), "_vacc_") 
+#   separate(file, c("slrun", "varset"), "_vacc_")
 
 save(cvaucs_d57_vacc, file = here("output", "cvaucs_d57_vacc.rda"))
-
