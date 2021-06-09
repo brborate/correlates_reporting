@@ -479,22 +479,25 @@ get_cv_predictions <- function(cv_fit, cvaucDAT) {
 # @param weights the inverse probability weights
 # @return the IPW CV-ROC curve
 ipw_roc_curves <- function(pred_obj, weights = rep(1, length(pred_obj@predictions[[1]]))) {
-    y <- as.numeric(pred_obj@labels[[1]])
-    y_levels <- unique(y)
+    y <- pred_obj@labels[[1]]
+    pos_label <- levels(pred_obj@labels[[1]])[2]
+    neg_label <- levels(pred_obj@labels[[1]])[1]
     # compute weighted num pos and neg
-    n_0_weighted <- sum((y == y_levels[1]) * weights)
-    n_1_weighted <- sum((y == y_levels[2]) * weights)
+    n_0_weighted <- sum((y == neg_label) * weights)
+    n_1_weighted <- sum((y == pos_label) * weights)
     # compute weighted true and false positive rates
     preds <- as.numeric(pred_obj@predictions[[1]])
     pred_order <- order(preds, decreasing = TRUE)
     ordered_preds <- preds[pred_order]
-    weighted_tp <- cumsum(weights[pred_order] * (y[pred_order] == y_levels[2]))
-    weighted_fp <- cumsum(weights[pred_order] * (y[pred_order] == y_levels[1]))
+    weighted_tp <- cumsum(weights[pred_order] * (y[pred_order] == pos_label))
+    weighted_fp <- cumsum(weights[pred_order] * (y[pred_order] == neg_label))
     dups <- rev(duplicated(rev(ordered_preds)))
-    fp <- c(0, weighted_fp[!dups]) / n_0_weighted
-    tp <- c(0, weighted_tp[!dups]) / n_1_weighted
+    fp <- c(0, weighted_fp[!dups])
+    tp <- c(0, weighted_tp[!dups])
     pred_obj@fp[[1]] <- fp
     pred_obj@tp[[1]] <- tp
+    pred_obj@n.pos[[1]] <- n_1_weighted
+    pred_obj@n.neg[[1]] <- n_0_weighted
     pred_obj
 }
 
@@ -514,7 +517,7 @@ plot_roc_curves <- function(predict, cvaucDAT, weights) {
     mutate(
       pred.obj = purrr::map(data, ~ ROCR::prediction(.x$pred, .x$Y)),
       weighted_pred_obj = purrr::map(pred.obj, ~ ipw_roc_curves(.x, weights)),
-      perf.obj = purrr::map(weighted_pred.obj, ~ ROCR::performance(.x, "tpr", "fpr")),
+      perf.obj = purrr::map(weighted_pred_obj, ~ ROCR::performance(.x, "tpr", "fpr")),
       roc.dat = purrr::map(perf.obj, ~ tibble(
         xval = .x@x.values[[1]],
         yval = .x@y.values[[1]]
