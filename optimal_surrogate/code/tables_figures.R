@@ -225,7 +225,7 @@ for(i in 1:length(unique(cvaucs_d57_vacc$varset))) {
   png(file = here("figs", paste0("predProb_", variableSet, ".png")),
       width = 1000, height = 1000)
   #png(file = here("figs", paste0("predProb_, variableSet, ".png"),      width = 1100, height = 1400)
-  p2 <- plot_predicted_probabilities(pred)
+  p2 <- plot_predicted_probabilities(pred, weights = ph2_vacc_ptids$wt.D57)
   print(p2)
   dev.off()
 }
