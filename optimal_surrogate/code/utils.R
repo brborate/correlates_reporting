@@ -474,12 +474,41 @@ get_cv_predictions <- function(cv_fit, cvaucDAT) {
     )
 }
 
+# Compute inverse probability weighted true and false positive rate, for CV-ROC curves
+# @param pred_obj an ROCR prediction object
+# @param weights the inverse probability weights
+# @return the IPW CV-ROC curve
+ipw_roc_curves <- function(pred_obj, weights = rep(1, length(pred_obj@predictions[[1]]))) {
+    y <- pred_obj@labels[[1]]
+    pos_label <- levels(pred_obj@labels[[1]])[2]
+    neg_label <- levels(pred_obj@labels[[1]])[1]
+    # compute weighted num pos and neg
+    n_0_weighted <- sum((y == neg_label) * weights)
+    n_1_weighted <- sum((y == pos_label) * weights)
+    # compute weighted true and false positive rates
+    preds <- as.numeric(pred_obj@predictions[[1]])
+    pred_order <- order(preds, decreasing = TRUE)
+    ordered_preds <- preds[pred_order]
+    weighted_tp <- cumsum(weights[pred_order] * (y[pred_order] == pos_label))
+    weighted_fp <- cumsum(weights[pred_order] * (y[pred_order] == neg_label))
+    dups <- rev(duplicated(rev(ordered_preds)))
+    fp <- c(0, weighted_fp[!dups])
+    tp <- c(0, weighted_tp[!dups])
+    pred_obj@fp[[1]] <- fp
+    pred_obj@tp[[1]] <- tp
+    pred_obj@n.pos[[1]] <- n_1_weighted
+    pred_obj@n.neg[[1]] <- n_0_weighted
+    pred_obj
+}
+
+
 
 # Plot ROC curves for SL, discrete.SL and topRanking learner-screen combinations
 # @param predict dataframe returned by get_cv_predictions function
 # @param cvaucDAT a dataframe containing Learner, Screen, and AUC
+# @param weights the inverse probability weights for the participants observed in phase 2
 # @return ggplot object containing the ROC curves
-plot_roc_curves <- function(predict, cvaucDAT) {
+plot_roc_curves <- function(predict, cvaucDAT, weights) {
   top3 <- choose_learners(cvaucDAT)
 
   roc.obj <- predict %>%
@@ -487,7 +516,8 @@ plot_roc_curves <- function(predict, cvaucDAT) {
     nest() %>%
     mutate(
       pred.obj = purrr::map(data, ~ ROCR::prediction(.x$pred, .x$Y)),
-      perf.obj = purrr::map(pred.obj, ~ ROCR::performance(.x, "tpr", "fpr")),
+      weighted_pred_obj = purrr::map(pred.obj, ~ ipw_roc_curves(.x, weights)),
+      perf.obj = purrr::map(weighted_pred_obj, ~ ROCR::performance(.x, "tpr", "fpr")),
       roc.dat = purrr::map(perf.obj, ~ tibble(
         xval = .x@x.values[[1]],
         yval = .x@y.values[[1]]
@@ -525,11 +555,13 @@ plot_roc_curves <- function(predict, cvaucDAT) {
 
 # Plot predicted probability plots for SL, discrete.SL and topRanking learner-screen combinations
 # @param pred dataframe returned by get_cv_predictions function
+# @param weights the inverse probability weights
 # @return ggplot object containing the predicted probability plots
-plot_predicted_probabilities <- function(pred) {
+plot_predicted_probabilities <- function(pred, weights = rep(1, length(pred$pred))) {
+  normalized_weights <- weights / sum(weights)
   pred %>%
-    mutate(Ychar = ifelse(Y == 0, "Control", "Case")) %>%
-    ggplot(aes(x = Ychar, y = pred, color = Ychar)) +
+    mutate(Ychar = ifelse(Y == 0, "Control", "Case"), wt_pred = pred * normalized_weights) %>%
+    ggplot(aes(x = Ychar, y = wt_pred, color = Ychar)) +
     geom_jitter(width = 0.015, size = 0.01) +
     geom_violin(alpha = 0.2, color = "black") +
     geom_boxplot(alpha = 0.2, width = 0.025, color = "black", outlier.size = NA, outlier.shape = NA) +
